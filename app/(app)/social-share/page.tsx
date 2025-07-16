@@ -1,25 +1,25 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { CldImage  } from "next-cloudinary";
+import { CldImage } from "next-cloudinary";
 import axios from "axios";
 
 const socialFormats = {
-    "Instagram Square (1:1)": { width: 1080, height: 1080, aspectRatio: "1:1" },
-    "Instagram Portrait (4:5)": { width: 1080, height: 1350, aspectRatio: "4:5" },
-    "Twitter Post (16:9)": { width: 1200, height: 675, aspectRatio: "16:9" },
-    "Twitter Header (3:1)": { width: 1500, height: 500, aspectRatio: "3:1" },
-    "Facebook Cover (205:78)": { width: 820, height: 312, aspectRatio: "205:78" },
-  };
+  "Instagram Square (1:1)": { width: 1080, height: 1080, aspectRatio: "1:1" },
+  "Instagram Portrait (4:5)": { width: 1080, height: 1350, aspectRatio: "4:5" },
+  "Twitter Post (16:9)": { width: 1200, height: 675, aspectRatio: "16:9" },
+  "Twitter Header (3:1)": { width: 1500, height: 500, aspectRatio: "3:1" },
+  "Facebook Cover (205:78)": { width: 820, height: 312, aspectRatio: "205:78" },
+};
 
-type SocialFormate = keyof typeof socialFormats;
+type SocialFormat = keyof typeof socialFormats;
 
 export default function SocialSharePage() {
-  const [uploadedImage, setUploadedImgae] = useState<string | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState<SocialFormate>(
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<SocialFormat>(
     "Instagram Square (1:1)"
   );
   const [isUploading, setIsUploading] = useState(false);
-    const [isTransforming, setIsTransforming] = useState(false);
+  const [isTransforming, setIsTransforming] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -37,16 +37,14 @@ export default function SocialSharePage() {
 
     const formData = new FormData();
     formData.append("file", file);
+
     try {
-      const response = await axios.post("/api/image-upload", { formData });
-
-      if (!response.data) throw new Error("Failed to upload image");
-
-      const data = response.data;
-      setUploadedImgae(data.publicId);
+      const response = await axios.post("/api/image-upload", formData); // ✅ NO headers!
+      if (!response.data) throw new Error("No response from server.");
+      setUploadedImage(response.data.publicId);
     } catch (error) {
-      console.log(error);
-      alert("Failed to upload image");
+      console.error("❌ Upload failed:", error);
+      alert("Upload failed!");
     } finally {
       setIsUploading(false);
     }
@@ -55,7 +53,6 @@ export default function SocialSharePage() {
   const handleDownload = () => {
     if (!imageRef.current) return;
 
-    // fetch
     fetch(imageRef.current.src)
       .then((response) => response.blob())
       .then((blob) => {
@@ -65,29 +62,14 @@ export default function SocialSharePage() {
         link.download = "image.png";
         document.body.appendChild(link);
         link.click();
-        document.body.appendChild(link);
-        link.click();
         document.body.removeChild(link);
-        document.body.removeChild(link);
-      });
-
-    // axios
-    /* axios
-      .get(imageRef.current.src, { responseType: "blob" })
-      .then((response) => {
-        const url = window.URL.createObjectURL(response.data); // response.data is the blob
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "image.png";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link); // only append/click/remove once
-        window.URL.revokeObjectURL(url); // cleanup
+        window.URL.revokeObjectURL(url);
       })
-      .catch((error) => {
-        console.error("Image download failed:", error);
-      }); */
+      .catch((err) => {
+        console.error("❌ Download failed:", err);
+      });
   };
+
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6 text-center">
@@ -122,7 +104,7 @@ export default function SocialSharePage() {
                   className="select select-bordered w-full"
                   value={selectedFormat}
                   onChange={(e) =>
-                    setSelectedFormat(e.target.value as SocialFormate)
+                    setSelectedFormat(e.target.value as SocialFormat)
                   }
                 >
                   {Object.keys(socialFormats).map((format) => (
@@ -141,7 +123,7 @@ export default function SocialSharePage() {
                       <span className="loading loading-spinner loading-lg"></span>
                     </div>
                   )}
-                  <CldImage 
+                  <CldImage
                     width={socialFormats[selectedFormat].width}
                     height={socialFormats[selectedFormat].height}
                     src={uploadedImage}
