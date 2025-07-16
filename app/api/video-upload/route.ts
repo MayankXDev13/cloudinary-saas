@@ -1,3 +1,4 @@
+
 import { NextResponse, NextRequest } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { auth } from "@clerk/nextjs/server";
@@ -8,7 +9,7 @@ const prisma = new PrismaClient();
 // Configuration
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET, // Click 'View API Keys' above to copy your API secret
 });
 
@@ -31,7 +32,7 @@ export async function POST(requset: NextRequest) {
 
     if (
       !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-      !process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY ||
+      !process.env.CLOUDINARY_API_KEY ||
       !process.env.CLOUDINARY_API_SECRET
     ) {
       return NextResponse.json(
@@ -86,6 +87,6 @@ export async function POST(requset: NextRequest) {
     console.log(`upload vidoe failed ${error}`);
     return NextResponse.json({ error: "Upload vidoe failed" }, { status: 500 });
   } finally {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   }
 }
